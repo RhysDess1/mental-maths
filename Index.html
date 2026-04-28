@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 6 Mental Maths Simulator</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface-2: #efede5;
+    --text: #1a1a1a;
+    --text-2: #5f5e5a;
+    --text-3: #888780;
+    --border: rgba(0, 0, 0, 0.12);
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --warn: #ba7517;
+    --warn-bg: #faeeda;
+    --danger: #a32d2d;
+    --danger-bg: #fcebeb;
+    --success: #3b6d11;
+    --success-bg: #eaf3de;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --surface: #262626;
+      --surface-2: #333330;
+      --text: #f0eee8;
+      --text-2: #b4b2a9;
+      --text-3: #888780;
+      --border: rgba(255, 255, 255, 0.15);
+      --accent: #85b7eb;
+      --accent-bg: #042c53;
+      --warn: #fac775;
+      --warn-bg: #633806;
+      --danger: #f09595;
+      --danger-bg: #501313;
+      --success: #97c459;
+      --success-bg: #173404;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 1rem;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 2rem auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+  }
+  header p {
+    font-size: 14px;
+    color: var(--text-2);
+    margin: 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  h2 { font-size: 18px; font-weight: 500; margin: 0 0 0.75rem; }
+  p { margin: 0 0 1rem; }
+  .muted { color: var(--text-2); font-size: 14px; }
+  .buckets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 1rem 0 1.25rem;
+  }
+  .bucket {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+  }
+  .bucket-label { font-size: 12px; color: var(--text-2); }
+  .bucket-value { font-size: 18px; font-weight: 500; margin-top: 2px; }
+  .topics {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+  .topics strong { color: var(--text); font-weight: 500; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--surface-2); }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 500;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .timer-bar-bg {
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .timer-bar {
+    height: 100%;
+    width: 100%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+  }
+  .q-card {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.5rem;
+  }
+  .question-text {
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 1.25rem;
+    line-height: 1.4;
+  }
+  input[type="text"] {
+    font-family: inherit;
+    width: 240px;
+    padding: 10px 12px;
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  .feedback {
+    margin-top: 1rem;
+    font-size: 14px;
+    text-align: center;
+    min-height: 22px;
+  }
+  .feedback .ok { color: var(--success); }
+  .feedback .bad { color: var(--danger); }
+  .feedback .timeout { color: var(--warn); }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .stat {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+  }
+  .stat-label { font-size: 12px; color: var(--text-2); }
+  .stat-value { font-size: 24px; font-weight: 500; margin-top: 2px; }
+  .review { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+  .review-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+  .review-num { font-weight: 500; color: var(--text-2); }
+  .review-q { font-weight: 500; }
+  .review-meta { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-ok { background: var(--success-bg); color: var(--success); }
+  .badge-bad { background: var(--danger-bg); color: var(--danger); }
+  .badge-timeout { background: var(--warn-bg); color: var(--warn); }
+  .footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .actions-row { display: flex; gap: 10px; }
+  .actions-row button { flex: 1; }
+  @media print {
+    body { background: white; color: black; padding: 0; }
+    .wrap { margin: 0; max-width: 100%; }
+    .no-print { display: none !important; }
+    .card { border: 1px solid #ccc; }
+    .review-row { background: #f5f5f5; }
+  }
+  @media (max-width: 520px) {
+    .question-text { font-size: 20px; }
+    input[type="text"] { width: 100%; max-width: 220px; }
+    .card { padding: 1.25rem 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Year 6 Mental Maths Simulator</h1>
+    <p>20 questions &middot; Three timed sections &middot; No calculator</p>
+  </header>
+
+  <section id="intro" class="card">
+    <h2>How it works</h2>
+    <p class="muted">You will get 20 questions in total. Each question shows on screen with a timer. You get 2 seconds to read, then the timer starts. Once time runs out, the next question appears automatically. You cannot go back to previous questions.</p>
+    <div class="buckets">
+      <div class="bucket"><div class="bucket-label">Questions 1&ndash;10</div><div class="bucket-value">8 seconds</div></div>
+      <div class="bucket"><div class="bucket-label">Questions 11&ndash;15</div><div class="bucket-value">10 seconds</div></div>
+      <div class="bucket"><div class="bucket-label">Questions 16&ndash;20</div><div class="bucket-value">15 seconds</div></div>
+    </div>
+    <div class="topics">
+      <div><strong>Easy (8s):</strong> multiplying and dividing by 10, 100, 1000; adding and subtracting hundreds and tens; number bonds; doubling and halving</div>
+      <div><strong>Medium (10s):</strong> fractions and percentages of amounts, rounding, time conversions</div>
+      <div><strong>Hard (15s):</strong> basic algebra, elapsed time, multi-step percentages</div>
+    </div>
+    <p class="muted" style="font-size: 13px;">Tip: sit somewhere quiet, have a pencil and paper nearby for jotting (not for working out), and take the test in one go.</p>
+    <button id="startBtn" class="btn-primary">Start test</button>
+  </section>
+
+  <section id="test" class="card" style="display: none;">
+    <div class="status-row">
+      <div>Question <span id="qNum">1</span> of 20</div>
+      <div id="timerLabel">Get ready&hellip;</div>
+    </div>
+    <div class="timer-bar-bg">
+      <div id="timerBar" class="timer-bar"></div>
+    </div>
+    <div class="q-card" style="background: var(--surface-2); border-radius: var(--radius);">
+      <div id="questionText" class="question-text"></div>
+      <input id="answerInput" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Your answer">
+      <button id="submitBtn" style="margin-top: 12px; padding: 8px 24px;">Submit</button>
+    </div>
+    <div id="feedback" class="feedback"></div>
+  </section>
+
+  <section id="results" class="card" style="display: none;">
+    <h2>Results</h2>
+    <div class="summary">
+      <div class="stat"><div class="stat-label">Score</div><div id="scoreOut" class="stat-value">0 / 20</div></div>
+      <div class="stat"><div class="stat-label">Percentage</div><div id="pctOut" class="stat-value">0%</div></div>
+      <div class="stat"><div class="stat-label">Timed out</div><div id="timeoutOut" class="stat-value">0</div></div>
+    </div>
+    <div id="reviewList" class="review"></div>
+    <div class="actions-row no-print">
+      <button id="retryBtn">New questions</button>
+      <button id="printBtn">Print / save results</button>
+    </div>
+  </section>
+
+  <div class="footer no-print">
+    Year 6 mental maths practice &middot; designed for UK curriculum
+  </div>
+</div>
+
+<script>
+(function() {
+  var rand = function(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; };
+  var pick = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+
+  // ===== Bucket 1 (8s): easy =====
+  function genPowerOfTen() {
+    var power = pick([10, 100, 1000]);
+    var op = pick(['×', '÷']);
+    if (op === '×') {
+      var base = rand(2, 99);
+      return { text: base + ' × ' + power, answer: String(base * power) };
+    }
+    var multiple = rand(2, 99);
+    var n = multiple * power;
+    return { text: n.toLocaleString('en-GB') + ' ÷ ' + power, answer: String(multiple) };
+  }
+  function genAddHundreds() {
+    var style = pick(['round_round', 'any_plus_hundreds', 'subtract_hundreds']);
+    if (style === 'round_round') {
+      var a = rand(1, 9) * 100, b = rand(1, 9) * 100;
+      return { text: a + ' + ' + b, answer: String(a + b) };
+    }
+    if (style === 'any_plus_hundreds') {
+      var base = rand(120, 980), add = rand(1, 8) * 100;
+      return { text: base + ' + ' + add, answer: String(base + add) };
+    }
+    var big = rand(500, 1800), sub = rand(1, 4) * 100;
+    return { text: big + ' − ' + sub, answer: String(big - sub) };
+  }
+  function genAddTens() {
+    var style = pick(['add', 'subtract']);
+    var base = rand(120, 890), amt = rand(2, 9) * 10;
+    if (style === 'add') return { text: base + ' + ' + amt, answer: String(base + amt) };
+    if (base - amt < 10) base = amt + rand(10, 200);
+    return { text: base + ' − ' + amt, answer: String(base - amt) };
+  }
+  function genNumberBond() {
+    var style = pick(['to_100', 'to_1000']);
+    if (style === 'to_100') {
+      var n = rand(12, 88);
+      return { text: 'What must be added to ' + n + ' to make 100?', answer: String(100 - n) };
+    }
+    var n2 = rand(1, 9) * 100 + pick([0, 50]);
+    if (n2 >= 1000) n2 = 950;
+    return { text: 'What must be added to ' + n2 + ' to make 1000?', answer: String(1000 - n2) };
+  }
+  function genDoubleHalve() {
+    var style = pick(['double', 'halve']);
+    if (style === 'double') {
+      var n = rand(11, 120);
+      return { text: 'Double ' + n, answer: String(n * 2) };
+    }
+    var even = rand(10, 150) * 2;
+    return { text: 'Half of ' + even, answer: String(even / 2) };
+  }
+
+  // ===== Bucket 2 (10s): medium =====
+  function genSimpleFraction() {
+    var frac = pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:1,d:5},{n:1,d:10}]);
+    var base = rand(2, 10) * frac.d * pick([1, 2]);
+    if (base > 200) base = frac.d * 4;
+    return { text: frac.n + '/' + frac.d + ' of ' + base, answer: String(base * frac.n / frac.d) };
+  }
+  function genPercentage() {
+    var pct = pick([10, 20, 25, 50, 75]);
+    var base;
+    if (pct === 25 || pct === 75) base = rand(1, 20) * 4;
+    else if (pct === 20) base = rand(1, 20) * 5;
+    else base = rand(1, 20) * 10;
+    return { text: pct + '% of ' + base, answer: String(base * pct / 100) };
+  }
+  function genRounding() {
+    var style = pick(['whole', 'decimal']);
+    if (style === 'whole') {
+      var n = rand(110, 999), to = pick([10, 100]);
+      return { text: 'Round ' + n + ' to the nearest ' + to, answer: String(Math.round(n / to) * to) };
+    }
+    var d = (rand(100, 9999) / 10).toFixed(1);
+    return { text: 'Round ' + d + ' to the nearest whole number', answer: String(Math.round(parseFloat(d))) };
+  }
+  function genTimeSimple() {
+    var style = pick(['min_to_hr', 'sec_to_min']);
+    if (style === 'min_to_hr') {
+      var total = rand(3, 9) * 60 + pick([0, 15, 30, 45]);
+      var h = Math.floor(total / 60), m = total % 60;
+      var ansText = m === 0 ? h + ' hours' : h + ' hours ' + m + ' minutes';
+      return { text: 'Convert ' + total + ' minutes to hours and minutes', answer: ansText, accept: [ansText, h + 'h ' + m + 'm', h + ':' + (m < 10 ? '0' + m : m)] };
+    }
+    var total2 = rand(2, 9) * 60 + pick([0, 15, 30, 45]);
+    var mm = Math.floor(total2 / 60), ss = total2 % 60;
+    var ansText2 = ss === 0 ? mm + ' minutes' : mm + ' minutes ' + ss + ' seconds';
+    return { text: 'Convert ' + total2 + ' seconds to minutes and seconds', answer: ansText2, accept: [ansText2, mm + 'm ' + ss + 's'] };
+  }
+
+  // ===== Bucket 3 (15s): hard =====
+  function genAlgebra() {
+    var style = pick(['linear', 'two_step', 'substitute']);
+    if (style === 'linear') {
+      var x = rand(2, 12), a = rand(2, 9), b = rand(1, 20);
+      return { text: 'If ' + a + 'n + ' + b + ' = ' + (a * x + b) + ', what is n?', answer: String(x) };
+    }
+    if (style === 'two_step') {
+      var x2 = rand(2, 10), a2 = rand(2, 6), b2 = rand(1, 15);
+      return { text: 'If ' + a2 + 'n − ' + b2 + ' = ' + (a2 * x2 - b2) + ', what is n?', answer: String(x2) };
+    }
+    var xv = rand(2, 10), coef = rand(2, 8), addv = rand(1, 15);
+    return { text: 'If n = ' + xv + ', what is ' + coef + 'n + ' + addv + '?', answer: String(coef * xv + addv) };
+  }
+  function genHarderTime() {
+    var style = pick(['duration', 'elapsed']);
+    if (style === 'duration') {
+      var sH = rand(8, 10), sM = pick([15, 25, 40, 50]);
+      var eH = rand(13, 16), eM = pick([5, 20, 35, 45]);
+      var mins = (eH * 60 + eM) - (sH * 60 + sM);
+      var h = Math.floor(mins / 60), m = mins % 60;
+      var ansT = m === 0 ? h + ' hours' : h + ' hours ' + m + ' minutes';
+      return { text: 'How long from ' + sH + ':' + (sM < 10 ? '0' + sM : sM) + ' to ' + eH + ':' + (eM < 10 ? '0' + eM : eM) + '?', answer: ansT, accept: [ansT, h + 'h ' + m + 'm'] };
+    }
+    var base = rand(45, 140);
+    var sH2 = rand(9, 11), sM2 = pick([10, 25, 40, 55]);
+    var totalM = sH2 * 60 + sM2 + base;
+    var endH = Math.floor(totalM / 60), endM = totalM % 60;
+    return { text: 'Film starts at ' + sH2 + ':' + (sM2 < 10 ? '0' + sM2 : sM2) + ' and lasts ' + base + ' minutes. When does it end?', answer: endH + ':' + (endM < 10 ? '0' + endM : endM) };
+  }
+  function genMultiStepPct() {
+    var base = pick([40, 60, 80, 120, 200, 240]);
+    var pct = pick([15, 30, 35, 60, 65, 85]);
+    return { text: pct + '% of ' + base, answer: String(base * pct / 100) };
+  }
+
+  var bucket1 = [genPowerOfTen, genAddHundreds, genAddTens, genNumberBond, genDoubleHalve];
+  var bucket2 = [genSimpleFraction, genPercentage, genRounding, genTimeSimple];
+  var bucket3 = [genAlgebra, genHarderTime, genMultiStepPct];
+
+  function buildQuestions() {
+    var qs = [];
+    for (var i = 0; i < 10; i++) qs.push(Object.assign(pick(bucket1)(), { time: 8 }));
+    for (var j = 0; j < 5; j++) qs.push(Object.assign(pick(bucket2)(), { time: 10 }));
+    for (var k = 0; k < 5; k++) qs.push(Object.assign(pick(bucket3)(), { time: 15 }));
+    return qs;
+  }
+
+  var state = null;
+  var timerId = null;
+  var graceId = null;
+
+  function normalize(s) {
+    return String(s).trim().toLowerCase().replace(/\s+/g, ' ').replace(/,/g, '').replace(/minutes?/g, 'min').replace(/hours?/g, 'h').replace(/seconds?/g, 's').replace(/mins/g, 'min').replace(/hrs/g, 'h').replace(/hr/g, 'h');
+  }
+  function checkAnswer(q, given) {
+    if (!given || !given.trim()) return false;
+    var acceptable = q.accept ? q.accept.slice() : [];
+    acceptable.push(q.answer);
+    var g = normalize(given);
+    for (var i = 0; i < acceptable.length; i++) {
+      if (normalize(acceptable[i]) === g) return true;
+    }
+    var gn = parseFloat(given.replace(/[^-0-9.]/g, ''));
+    var an = parseFloat(q.answer.replace(/[^-0-9.]/g, ''));
+    if (!isNaN(gn) && !isNaN(an) && Math.abs(gn - an) < 0.0001 && !/:/.test(q.answer)) return true;
+    return false;
+  }
+
+  function showQuestion() {
+    var q = state.questions[state.idx];
+    document.getElementById('qNum').textContent = (state.idx + 1);
+    document.getElementById('questionText').textContent = q.text;
+    document.getElementById('answerInput').value = '';
+    document.getElementById('answerInput').disabled = true;
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('timerLabel').textContent = 'Reading... (' + q.time + 's timer next)';
+    document.getElementById('timerBar').style.width = '100%';
+    document.getElementById('timerBar').style.background = 'var(--warn)';
+
+    var graceStart = Date.now();
+    graceId = setInterval(function() {
+      var elapsed = Date.now() - graceStart;
+      var pct = Math.max(0, 100 - (elapsed / 2000) * 100);
+      document.getElementById('timerBar').style.width = pct + '%';
+      if (elapsed >= 2000) {
+        clearInterval(graceId);
+        startTimer(q);
+      }
+    }, 50);
+  }
+
+  function startTimer(q) {
+    document.getElementById('answerInput').disabled = false;
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('answerInput').focus();
+    document.getElementById('timerBar').style.background = 'var(--accent)';
+    var total = q.time * 1000;
+    var start = Date.now();
+    document.getElementById('timerLabel').textContent = q.time + '.0s left';
+    timerId = setInterval(function() {
+      var left = total - (Date.now() - start);
+      if (left <= 0) {
+        clearInterval(timerId);
+        document.getElementById('timerBar').style.width = '0%';
+        document.getElementById('timerLabel').textContent = 'Time up';
+        submitAnswer(true);
+        return;
+      }
+      var pct = (left / total) * 100;
+      document.getElementById('timerBar').style.width = pct + '%';
+      document.getElementById('timerLabel').textContent = (left / 1000).toFixed(1) + 's left';
+      if (pct < 30) document.getElementById('timerBar').style.background = 'var(--danger)';
+    }, 50);
+  }
+
+  function submitAnswer(timedOut) {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    if (graceId) { clearInterval(graceId); graceId = null; }
+    var q = state.questions[state.idx];
+    var given = document.getElementById('answerInput').value;
+    var correct = !timedOut && checkAnswer(q, given);
+    state.responses.push({ q: q, given: given, correct: correct, timedOut: timedOut });
+
+    var fb = document.getElementById('feedback');
+    if (timedOut && !given.trim()) {
+      fb.innerHTML = '<span class="timeout">Timed out.</span> Answer: <strong>' + q.answer + '</strong>';
+    } else if (correct) {
+      fb.innerHTML = '<span class="ok">Correct</span>';
+    } else {
+      fb.innerHTML = '<span class="bad">Wrong.</span> Answer: <strong>' + q.answer + '</strong>';
+    }
+
+    document.getElementById('answerInput').disabled = true;
+    document.getElementById('submitBtn').disabled = true;
+
+    setTimeout(function() {
+      state.idx++;
+      if (state.idx >= state.questions.length) showResults();
+      else showQuestion();
+    }, 1200);
+  }
+
+  function showResults() {
+    document.getElementById('test').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    var correct = state.responses.filter(function(r) { return r.correct; }).length;
+    var timeouts = state.responses.filter(function(r) { return r.timedOut && !r.correct; }).length;
+    document.getElementById('scoreOut').textContent = correct + ' / 20';
+    document.getElementById('pctOut').textContent = Math.round(correct / 20 * 100) + '%';
+    document.getElementById('timeoutOut').textContent = String(timeouts);
+
+    var list = document.getElementById('reviewList');
+    list.innerHTML = '';
+    state.responses.forEach(function(r, i) {
+      var row = document.createElement('div');
+      row.className = 'review-row';
+      var givenDisplay = r.timedOut && !r.given.trim() ? '<em style="color: var(--text-3);">no answer</em>' : r.given;
+      var badgeClass = r.correct ? 'badge-ok' : (r.timedOut ? 'badge-timeout' : 'badge-bad');
+      var badgeText = r.correct ? 'Correct' : (r.timedOut ? 'Timed out' : 'Wrong');
+      row.innerHTML =
+        '<div class="review-num">' + (i + 1) + '</div>' +
+        '<div><div class="review-q">' + r.q.text + '</div>' +
+        '<div class="review-meta">You: ' + givenDisplay + ' &middot; Answer: ' + r.q.answer + '</div></div>' +
+        '<div class="badge ' + badgeClass + '">' + badgeText + '</div>';
+      list.appendChild(row);
+    });
+  }
+
+  function start() {
+    state = { questions: buildQuestions(), idx: 0, responses: [] };
+    document.getElementById('intro').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('test').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showQuestion();
+  }
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('retryBtn').addEventListener('click', start);
+  document.getElementById('submitBtn').addEventListener('click', function() { submitAnswer(false); });
+  document.getElementById('printBtn').addEventListener('click', function() { window.print(); });
+  document.getElementById('answerInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !document.getElementById('submitBtn').disabled) submitAnswer(false);
+  });
+})();
+</script>
+</body>
+</html>
